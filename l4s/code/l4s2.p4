@@ -131,14 +131,6 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
-    action egress_l4s_queue() {
-        standard_metadata.egress_spec = 9; // Porta/fila representando L4S
-    }
-
-    action egress_default_queue() {
-        standard_metadata.egress_spec = 8; // Porta/fila padrão
-    }
-
     action mark() {
         hdr.ipv4.ecn = 3; //congestionamento
     }
@@ -153,14 +145,13 @@ control MyEgress(inout headers hdr,
             if (rnd < MAX_RND / 2) {
                 meta.isL4S = 1;
                 meta.isClassic = 0;
-                mark_l4s();
+                mark();
             }
         } else if (hdr.ipv4.ecn == 2) {
             meta.isL4S = 0;
             meta.isClassic = 1;
             if (rnd < MAX_RND / 2) {
-                egress_default_queue();
-                mark_classic();
+                mark();
             } else {
                 meta.mark_drop = 1; // Marca para descartar
             }
