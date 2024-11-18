@@ -3,18 +3,18 @@
 
 
 const bit<16> TYPE_IPV4 = 0x800;
-
+const bit<32> MAX_RND = 0xFFFFFFFF;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>  egressSpec_t;
-typedef bit<48> macAddr_t;
-typedef bit<32> ip4Addr_t;
+typedef bit<9>  egress_spec_t;
+typedef bit<48> mac_addr_t;
+typedef bit<32> ipv4_addr_t;
 
 header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
+    mac_addr_t dstAddr;
+    mac_addr_t srcAddr;
     bit<16> etherType;
 }
 
@@ -30,8 +30,8 @@ header ipv4_t {
     bit<8> ttl;
     bit<8> protocol;
     bit<16> hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
+    ipv4_addr_t srcAddr;
+    ipv4_addr_t dstAddr;
 }
 
 // Define uma estrutura de metadados
@@ -90,16 +90,17 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+    action drop() {
+        mark_to_drop(standard_metadata);
+    }
+
+    action ipv4_forward(mac_addr_t dstAddr, egress_spec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action drop() {
-        mark_to_drop(standard_metadata);
-    }
 
     table ipv4_lpm {
         key = {
@@ -140,26 +141,41 @@ control MyEgress(inout headers hdr,
         hdr.ipv4.ecn = 3;
     }
 
-//  table aqm{
-//        key = {
-//          standard_metadata.egress_port: exact;
-//        }
-//        actions = {
-//            pi2();
-//            NoAction;
-//        }
-//        default_action = NoAction;
-//    }
+    action m1() {
+        // Gera um número aleatório
+        bit<32> rnd;
+        random(rnd, 0, MAX_RND);
+
+        // Verifica se o pacote será marcado ou descartado
+        if (hdr.ipv4.ecn == 1) {
+            if (rnd < MAX_RND / 2) {
+                egress_l4s_queue();
+                mark();
+            }
+        } else {
+            if (rnd < MAX_RND / 2) {
+                egress_default_queue();
+                mark();
+            } else {
+                meta.mark_drop = 1; // Marca para descartar
+            }
+        }
+    }
+
+    table aqm{
+        key = {
+          standard_metadata.egress_port: exact;
+        }
+        actions = {
+            m1();
+            NoAction;
+        }
+        default_action = NoAction;
+    }
 
     apply {
         if (hdr.ipv4.isValid()) {
-            if (hdr.ipv4.ecn == 1) { // ECT(1) indica tráfego L4Sw
-                egress_l4s_queue();
-                mark();
-            } else {
-                egress_default_queue();
-                meta.mark_drop = 1;
-            }
+            aqm.apply();
         }
     }
 }
