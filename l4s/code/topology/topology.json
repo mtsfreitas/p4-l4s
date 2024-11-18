@@ -21,8 +21,8 @@
     },
     "switches": {
         "s1": {
-            "cli_input": "topology/s1-commands.txt",
-            "runtime_json": "topology/s1-runtime.json"
+          "cli_input" : "topology/s1-commands.txt",
+          "runtime_json" : "topology/s1-runtime.json"
         }
     },
     "links": [

@@ -6,8 +6,11 @@ class ShortestPath:
             self.addEdge(*edge)
 
     def addEdge(self, a, b):
-        self.neighbors.setdefault(a, set()).add(b)
-        self.neighbors.setdefault(b, set()).add(a)
+        if a not in self.neighbors: self.neighbors[a] = []
+        if b not in self.neighbors[a]: self.neighbors[a].append(b)
+
+        if b not in self.neighbors: self.neighbors[b] = []
+        if a not in self.neighbors[b]: self.neighbors[b].append(a)
 
     def get(self, a, b, exclude=lambda node: False):
         # Shortest path from a to b
@@ -43,14 +46,14 @@ if __name__ == '__main__':
     ]
     sp = ShortestPath(edges)
 
-    assert sp.get(1, 1) == [1] # shortest path from node 1 to itself
-    assert sp.get(2, 2) == [2] # shortest path from node 2 to itself
+    assert sp.get(1, 1) == [1]
+    assert sp.get(2, 2) == [2]
 
     assert sp.get(1, 2) == [1, 2]
     assert sp.get(2, 1) == [2, 1]
 
-    assert sp.get(1, 3) == [1, 3] # shortest path from node 1 to node 3
-    assert sp.get(3, 1) == [3, 1] # shortest path from node 3 to node 1
+    assert sp.get(1, 3) == [1, 3]
+    assert sp.get(3, 1) == [3, 1]
 
     assert sp.get(4, 6) == [4, 6]
     assert sp.get(6, 4) == [6, 4]
@@ -58,8 +61,8 @@ if __name__ == '__main__':
     assert sp.get(2, 6) == [2, 4, 6]
     assert sp.get(6, 2) == [6, 4, 2]
 
-    assert sp.get(1, 6) in [[1, 3, 6], [1, 5, 6]] # Multiple shortest paths from 1 to 6
-    assert sp.get(6, 1) in [[6, 3, 1], [6, 5, 1]] # Multiple shortest paths from 6 to 1
+    assert sp.get(1, 6) in [[1, 3, 6], [1, 5, 6]]
+    assert sp.get(6, 1) in [[6, 3, 1], [6, 5, 1]]
 
     assert sp.get(2, 5) == [2, 1, 5]
     assert sp.get(5, 2) == [5, 1, 2]
@@ -70,6 +73,6 @@ if __name__ == '__main__':
     assert sp.get(7, 8) == [7, 8]
     assert sp.get(8, 7) == [8, 7]
 
-    assert sp.get(1, 7) == None # There is no path from node 1 to node 7
-    assert sp.get(7, 2) == None # There is no path from node 7 to node 2
+    assert sp.get(1, 7) == None
+    assert sp.get(7, 2) == None
 

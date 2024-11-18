@@ -1,6 +1,1 @@
-tc qdisc add dev s1-eth8 root handle 1: htb default 1
-tc class add dev s1-eth8 parent 1: classid 1:1 htb rate 1mbit
-tc qdisc add dev s1-eth9 root handle 1: htb default 1
-tc class add dev s1-eth9 parent 1: classid 1:1 htb rate 10mbit
-tc qdisc add dev s1-eth8 parent 1:1 netem delay 5ms
-tc qdisc add dev s1-eth9 parent 1:1 netem delay 1ms
+mirroring_add 500 1

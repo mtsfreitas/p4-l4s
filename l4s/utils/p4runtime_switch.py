@@ -89,10 +89,6 @@ class P4RuntimeSwitch(P4Switch):
             P4Switch.device_id += 1
         self.nanomsg = "ipc:///tmp/bm-{}-log.ipc".format(self.device_id)
 
-        self.cpu_port = None
-        if "cpu_port" in kwargs:
-            self.cpu_port = kwargs["cpu_port"]
-
 
     def check_switch_started(self, pid):
         for _ in range(SWITCH_START_TIMEOUT * 2):
@@ -126,11 +122,8 @@ class P4RuntimeSwitch(P4Switch):
             args.append('--thrift-port ' + str(self.thrift_port))
         if self.grpc_port:
             args.append("-- --grpc-server-addr 0.0.0.0:" + str(self.grpc_port))
-        if self.cpu_port:
-            args.append("--cpu-port " + str(self.cpu_port))
         cmd = ' '.join(args)
         info(cmd + "\n")
-        print(cmd + "\n")
 
 
         pid = None
@@ -142,3 +135,4 @@ class P4RuntimeSwitch(P4Switch):
             error("P4 switch {} did not start correctly.\n".format(self.name))
             exit(1)
         info("P4 switch {} has been started.\n".format(self.name))
+
